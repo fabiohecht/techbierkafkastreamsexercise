@@ -1,0 +1,32 @@
+{
+  "namespace": "ch.ipt.techbier.kafkastreams",
+  "name": "Employee",
+  "type": "record",
+  "fields": [
+    {
+      "name": "id",
+      "type": "int"
+    },
+    {
+      "name": "join_date",
+      "type": "int",
+      "logicalType": "date"
+    },
+    {
+      "name": "acronym",
+      "type": "string"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "favorite_quote",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}
