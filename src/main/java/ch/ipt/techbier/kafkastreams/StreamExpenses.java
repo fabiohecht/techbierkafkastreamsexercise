@@ -11,10 +11,6 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.Reducer;
-import org.apache.kafka.streams.processor.internals.DefaultStreamPartitioner;
-import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +63,7 @@ public class StreamExpenses {
         final KTable<String, Integer> expensePerEmployeeTable = expenseStream
 
                 // for demo purposes
-                .peek((k, v) -> log.debug("new expense: %s\n", v.toString()))
+                .peek((k, v) -> log.debug(" \uD83D\uDCB5 \uD83D\uDCB8 new expense: %s\n", v.toString()))
 
                 // set our wanted keys and values
                 .map((k, v) -> new KeyValue<>(v.getEmployeeAcronym(), v.getAmount()))
@@ -76,6 +72,7 @@ public class StreamExpenses {
                 .groupByKey()
                 .reduce((v1, v2) -> v1 + v2);
 
+        //output KTable to topic
         expensePerEmployeeTable.toStream().to(OUTPUT_TOPIC_EMPLOYEE_EXPENSE);
 
         final KafkaStreams streamsContracts = new KafkaStreams(builder.build(), config);
