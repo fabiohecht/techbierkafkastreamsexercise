@@ -67,7 +67,7 @@ public class StreamExpenses {
         final KTable<String, Integer> expensePerEmployeeTable = expenseStream
 
                 // for demo purposes
-                .peek((k, v) -> System.out.printf("new expense: %s\n", v.toString()))
+                .peek((k, v) -> log.debug("new expense: %s\n", v.toString()))
 
                 // set our wanted keys and values
                 .map((k, v) -> new KeyValue<>(v.getEmployeeAcronym(), v.getAmount()))
