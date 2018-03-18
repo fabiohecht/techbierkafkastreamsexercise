@@ -1,0 +1,19 @@
+{
+  "namespace": "ch.ipt.techbier.kafkastreams",
+  "version": "1",
+  "name": "SumValue",
+  "type": "record",
+  "doc": "Sum of all expenses registered for an employee.",
+  "fields": [
+    {
+      "name": "employeeAcronym",
+      "doc": "Acronym of the employee who spent the money.",
+      "type": "string"
+    },
+    {
+      "name": "sum_amount",
+      "doc": "How much it all (without comma, e.g. in cents, Rappen, etc.).",
+      "type": "int"
+    }
+  ]
+}
