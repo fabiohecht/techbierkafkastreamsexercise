@@ -88,4 +88,5 @@ Modify StreamExpenses to output the full name of the Employee along with the acr
 
 4. Run StreamExpenses and observe results with kafka-avro-console-consumer
 
+The above solution is implemented in the "join" branch.
 
