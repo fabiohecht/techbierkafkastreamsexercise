@@ -1,10 +1,11 @@
 
-# Exercise n
+# Exercise 6
 
-This is a simple Kafka Streams application demo.
+This is a "simple" Kafka Streams application demo.
 
 It consumes from a topic named "expense" (null keys, value Avro ch.ipt.techbier.kafkastreams.Expense)
-and produces to topic "employeeexpense" (String key, Integer value) simply adding all expenses for each employee.
+and produces to topic "employeeexpense" (String key, value Avro ch.ipt.techbier.kafkastreams.SumValue) 
+simply adding all expenses for each employee.
 
 **Look at code**
 
@@ -14,18 +15,18 @@ Have a look at the implementation to see how the KStream containing all expenses
 
 **Run the Kafka Streams Application**
 
-It has a simple main method that must be called.
+Kafka Streams application are normal Java applications. Just run StreamExpenses's main method.
 In IntelliJ you can use Shift+F10 or click the green play icon.
 
 **Run a console consumer**
 
-On a terminal window, use the console consumer to view the contents of the employeeexpense topic.
+Use two terminal windows to view the contents of the in topic.
 
 **Run the Java Avro producer**
 
 Run the producer built before with Avro.
 
-**Exercise**
+# Exercise 7
 
 In src/main/resources/avro
 
@@ -36,11 +37,31 @@ In src/main/resources/avro
   - Use builder.table to create a KTable variable for the "employee" topic.
   - The output KTable will be <String, String>
   - Use a .join() immediately after the .reduce 
-  
+
+
 **Extra credit**
 
 Level: Hard.
 
-Create another output with Avro value type.
+Create another output with Avro value type that outputs the average.
 
-Hint:
+Hints:
+
+
+
+
+to start reprocessing:
+
+1. stop streams app + producer
+2. (optional) type kafka-streams-application-reset to understand what the tool does
+3. kafka-streams-application-reset --application-id StreamExpenses-v1 \
+                                      --input-topics iptspesenavro6 \
+                                      --bootstrap-servers localhost:9092
+4. clear local store: rm -rf /tmp/kafka-streams/StreamExpenses-v1
+
+to clear input topic, you could just delete it. It will be autocreated by the producer when run again.
+    kafka-topics --zookeeper localhost:2181 --delete --topic iptspesenavro6
+
+
+
+kafka-avro-console-consumer --bootstrap-server localhost:9092 --topic employeeexpenseavro5 --from-beginning

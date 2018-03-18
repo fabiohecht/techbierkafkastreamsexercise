@@ -1,14 +1,10 @@
 package ch.ipt.techbier.kafkastreams;
 
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
-import io.confluent.kafka.serializers.KafkaAvroDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
 import org.slf4j.Logger;
@@ -20,15 +16,13 @@ import java.util.Properties;
 public class StreamExpenses {
     static final Logger log = LoggerFactory.getLogger(StreamExpenses.class);
 
-    private static final String INPUT_TOPIC_EXPENSE = "iptspesenavro5";
-    private static final String OUTPUT_TOPIC_EMPLOYEE_EXPENSE = "employeeexpenseavro5";
+    private static final String INPUT_TOPIC_EXPENSE = "iptspesenavro6";
+    private static final String OUTPUT_TOPIC_EMPLOYEE_EXPENSE = "employeeexpenseavro6";
 
     private static final String INPUT_TOPIC_EMPLOYEE = "employee";
     private static final String OUTPUT_TOPIC_EMPLOYEE_EXPENSE_NAME = "employeeexpensename";
 
     final static Serde<String> stringSerde = Serdes.String();
-    final static Serde<Integer> integerSerde = Serdes.Integer();
-    final static Serde<Expense> expenseSpecificAvroSerde = new SpecificAvroSerde<>();
 
     private static Properties config = new Properties();
 
@@ -43,19 +37,17 @@ public class StreamExpenses {
         config.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://127.0.0.1:8081");
         config.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams");
 
-        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "StreamExpenses-v2");
-        config.put(StreamsConfig.CLIENT_ID_CONFIG, "StreamExpenses-v2");
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "StreamExpenses-v1");
+        config.put(StreamsConfig.CLIENT_ID_CONFIG, "StreamExpenses-v1");
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, SpecificAvroSerde.class);
-//        config.put("key.serializer", StringSerializer.class.getName());
-//        config.put("value.serializer", KafkaAvroSerializer.class.getName());
 
         // Enable record cache of size 10 MB.
         config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 10 * 1024 * 1024L);
 
-        // Set commit interval to 1 second.
+        // Set commit interval to 1 second
         config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
 
     }
