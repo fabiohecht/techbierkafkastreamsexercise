@@ -1,6 +1,5 @@
 {
   "namespace": "ch.ipt.techbier.kafkastreams",
-  "version": "1",
   "name": "Expense",
   "type": "record",
   "doc": "An expense registered for an employee.",

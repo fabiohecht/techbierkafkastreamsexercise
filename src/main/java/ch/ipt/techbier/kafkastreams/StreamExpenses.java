@@ -3,7 +3,6 @@ package ch.ipt.techbier.kafkastreams;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
@@ -16,13 +15,8 @@ import java.util.Properties;
 public class StreamExpenses {
     static final Logger log = LoggerFactory.getLogger(StreamExpenses.class);
 
-    private static final String INPUT_TOPIC_EXPENSE = "iptspesenavro6";
-    private static final String OUTPUT_TOPIC_EMPLOYEE_EXPENSE = "employeeexpenseavro6";
-
-    private static final String INPUT_TOPIC_EMPLOYEE = "employee";
-    private static final String OUTPUT_TOPIC_EMPLOYEE_EXPENSE_NAME = "employeeexpensename";
-
-    final static Serde<String> stringSerde = Serdes.String();
+    private static final String INPUT_TOPIC_EXPENSE = "ipt-spesen-avro";
+    private static final String OUTPUT_TOPIC_EMPLOYEE_EXPENSE = "employee-expense-avro";
 
     private static Properties config = new Properties();
 
@@ -33,8 +27,8 @@ public class StreamExpenses {
 
     static void initializeConfig() {
 
-        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
-        config.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://127.0.0.1:8081");
+        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8081");
         config.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams");
 
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "StreamExpenses-v1");
@@ -58,91 +52,38 @@ public class StreamExpenses {
 
         final StreamsBuilder builder = new StreamsBuilder();
 
-        final KStream<String, Expense> expenseStream = builder.stream(INPUT_TOPIC_EXPENSE/*, Consumed.with(stringSerde, expenseSpecificAvroSerde)*/);
+        final KStream<String, Expense> expenseStream = builder.stream(INPUT_TOPIC_EXPENSE);
 
         final KTable<String, SumValue> expensePerEmployeeTable =
                 expenseStream
 
-                        // for demo purposes
+                        // for demo/debugging purposes, output what has come in through the KStream (does not change stream)
                         .peek((k, v) -> log.debug(" \uD83D\uDCB5 \uD83D\uDCB8 new expense: {}", v.toString()))
 
-//                        //try with groupBy
-                .groupBy((s, expense) -> expense.getEmployeeAcronym())
-                        //.aggregate(() -> 0, (s, expense, integer) -> 1, Materialized.with(stringSerde, integerSerde));
-                        // set our wanted keys and values
-//                .mapValues((v) -> v.getAmount())
-
-//                .reduce(
-//                        (v1, v2) -> v1.getAmount() + v2.getAmount(),
-//                )
-//                .mapValues(Expense::getAmount);
-//
-//
-//                        .map((k, v) -> new KeyValue<>(v.getEmployeeAcronym(), v.getAmount()))
-//
-//                        //try with groupByKey and reduce
-
-//                        .groupByKey()
+                        // aggregations are done with groupBy then reduce or aggregate
+                        .groupBy((s, expense) -> expense.getEmployeeAcronym())
                         .reduce((v1, v2) -> {
                             v1.setAmount(v1.getAmount() + v2.getAmount());
                             return v1;
                         })
-                        .mapValues(expense -> {
-                            return SumValue.newBuilder()
-                                    .setEmployeeAcronym(expense.getEmployeeAcronym())
-                                    .setSumAmount(expense.getAmount())
-                                    .build();
-                        });
 
+                        // converts values from Expense to SumValue
+                        .mapValues(expense ->
+                                SumValue.newBuilder()
+                                        .setEmployeeAcronym(expense.getEmployeeAcronym())
+                                        .setSumAmount(expense.getAmount())
+                                        .build()
+                        );
 
-
+        // for demo/debugging purposes, output what we are writing to the KTable
         expensePerEmployeeTable
                 .toStream()
-                .peek((k, v) -> log.debug(" ended: {}", v.toString()));
+                .peek((k, v) -> log.debug(" total: {} {}", k, v.toString()));
 
-
-        //output KTable to topic
+        // output KTable to topic
         expensePerEmployeeTable.toStream().to(OUTPUT_TOPIC_EMPLOYEE_EXPENSE);
 
-        final KafkaStreams streamsContracts = new KafkaStreams(builder.build(), config);
-
-        streamsContracts.cleanUp();
-        streamsContracts.start();
-
-        // Add shutdown hook to respond to SIGTERM and gracefully close Kafka Streams
-        Runtime.getRuntime().addShutdownHook(new Thread(streamsContracts::close));
-    }
-
-    private static void startStream2() {
-
-        log.info("starting kafka streams 2");
-
-        final StreamsBuilder builder = new StreamsBuilder();
-
-        final KStream<String, Expense> expenseStream = builder.stream(INPUT_TOPIC_EXPENSE);
-        final KTable<String, String> employeeTable = builder.table(INPUT_TOPIC_EMPLOYEE, Materialized.with(stringSerde, stringSerde));
-
-        final KTable<String, String> expensePerEmployeeTable = expenseStream
-
-                // for demo purposes
-                .peek((k, v) -> log.debug(" \uD83D\uDCB5 \uD83D\uDCB8 new expense: %s\n", v.toString()))
-
-                // set our wanted keys and values
-                .map((k, v) -> new KeyValue<>(v.getEmployeeAcronym(), v.getAmount()))
-
-                //KStream aggregations such as `reduce` operate on a per-key basis
-                .groupByKey()
-                .reduce((v1, v2) -> v1 + v2)
-
-                .join(
-                        employeeTable,
-                        //for simplicity, we use a String, a more elegant solution would use another Object instead
-                        (amount, employeeName) -> employeeName + " -> " + amount
-                );
-
-        //output KTable to topic
-        expensePerEmployeeTable.toStream().to(OUTPUT_TOPIC_EMPLOYEE_EXPENSE_NAME);
-
+        // starts stream
         final KafkaStreams streamsContracts = new KafkaStreams(builder.build(), config);
 
         streamsContracts.cleanUp();
