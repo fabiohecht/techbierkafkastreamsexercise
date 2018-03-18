@@ -13,6 +13,12 @@
       "name": "sum_amount",
       "doc": "How much it all (without comma, e.g. in cents, Rappen, etc.).",
       "type": "int"
+    },
+    {
+      "name": "employeeFullName",
+      "doc": "Full name of the employee who spent the money.",
+      "type": ["null", "string"],
+      "default":null
     }
   ]
 }

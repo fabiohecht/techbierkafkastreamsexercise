@@ -3,6 +3,7 @@ package ch.ipt.techbier.kafkastreams;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
@@ -17,6 +18,8 @@ public class StreamExpenses {
 
     private static final String INPUT_TOPIC_EXPENSE = "ipt-spesen-avro";
     private static final String OUTPUT_TOPIC_EMPLOYEE_EXPENSE = "employee-expense-avro";
+
+    private static final String INPUT_TOPIC_EMPLOYEE = "employees";
 
     private static Properties config = new Properties();
 
@@ -53,6 +56,9 @@ public class StreamExpenses {
         final StreamsBuilder builder = new StreamsBuilder();
 
         final KStream<String, Expense> expenseStream = builder.stream(INPUT_TOPIC_EXPENSE);
+        Serde<String> stringSerde = Serdes.String();
+        final KTable<String, String> employeeTable = builder.table(INPUT_TOPIC_EMPLOYEE, Materialized.with(stringSerde, stringSerde));
+
 
         final KTable<String, SumValue> expensePerEmployeeTable =
                 expenseStream
@@ -73,7 +79,16 @@ public class StreamExpenses {
                                         .setEmployeeAcronym(expense.getEmployeeAcronym())
                                         .setSumAmount(expense.getAmount())
                                         .build()
-                        );
+                        )
+
+                        //joins with employee to add full name
+                        //joins are always based on Keys, in our case we are lucky that both are keyed by acronym
+                        .join(
+                                employeeTable,
+                                (expense, name) -> {
+                                    expense.setEmployeeFullName(name);
+                                    return expense;
+                                });
 
         // for demo/debugging purposes, output what we are writing to the KTable
         expensePerEmployeeTable
